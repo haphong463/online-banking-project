@@ -4,13 +4,12 @@ package com.windev.online_banking.service.impl;
 
 import com.windev.online_banking.entity.User;
 import com.windev.online_banking.exception.BankingException;
+import com.windev.online_banking.payload.request.SignupRequest;
 import com.windev.online_banking.payload.response.JwtResponse;
 import com.windev.online_banking.payload.response.MessageResponse;
 import com.windev.online_banking.repository.UserRepository;
 import com.windev.online_banking.security.JwtUtil;
-import com.windev.online_banking.service.EmailService;
-import com.windev.online_banking.service.OtpService;
-import com.windev.online_banking.service.UserService;
+import com.windev.online_banking.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,19 +51,33 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private EmailVerificationService emailVerificationService;
+
+    @Autowired
+    private SmsService smsService;
+
+
     private Random random = new Random();
 
     @Override
-    public User registerUser(User user) {
-        if(userRepository.findByUsername(user.getUsername()) != null){
+    public User registerUser(SignupRequest signupRequest) {
+        if(userRepository.findByUsername(signupRequest.getUsername()).isPresent()){
             throw new BankingException("Username already exists", HttpStatus.BAD_REQUEST);
         }
-        if(userRepository.findByEmail(user.getEmail()) != null){
+        if(userRepository.findByEmail(signupRequest.getEmail()).isPresent()){
             throw new BankingException("Email already in use", HttpStatus.BAD_REQUEST);
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        User user = new User();
+        user.setUsername(signupRequest.getUsername());
+        user.setEmail(signupRequest.getEmail());
+        user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
+        user.setPhoneNumber(signupRequest.getPhoneNumber());
         user.setRole("USER");
+        user.setEmailVerified(false);
         user.setEnabled(true);
+
+        emailVerificationService.sendVerificationEmail(user);
         return userRepository.save(user);
     }
 
@@ -90,7 +103,9 @@ public class UserServiceImpl implements UserService {
                 String otp = otpService.generateOtp();
                 otpService.storeOtp(username, otp);
                 String email = user.getEmail();
-                emailService.sendOtpEmail(email, "Your OTP Code", "Your OTP code is: " + otp);
+                String phoneNumber = user.getPhoneNumber(); // Giả sử bạn có trường phoneNumber trong User
+                smsService.sendSms(phoneNumber, "Your OTP code is: " + otp);
+//                emailService.sendOtpEmail(email, "Your OTP Code", "Your OTP code is: " + otp);
 
                 return "OTP sent to your email";
             } catch (BadCredentialsException e) {

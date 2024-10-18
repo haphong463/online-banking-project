@@ -1,36 +1,35 @@
 package com.windev.online_banking.service.impl;
 
 import com.windev.online_banking.service.OtpService;
+import com.windev.online_banking.service.SmsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.security.SecureRandom;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class OtpServiceImpl implements OtpService {
 
-    private Map<String, String> otpStorage = new ConcurrentHashMap<>();
-    private SecureRandom random = new SecureRandom();
-    private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    @Autowired
+    private SmsService smsService;
+
+    private final ConcurrentHashMap<String, String> otpStorage = new ConcurrentHashMap<>();
 
     @Override
     public String generateOtp() {
-        int otp = 100000 + random.nextInt(900000);
+        // Tạo OTP 6 chữ số
+        int otp = (int)(Math.random() * 900000) + 100000;
         return String.valueOf(otp);
-    }
-
-    @Override
-    public boolean validateOtp(String otp) {
-        return otpStorage.containsValue(otp);
     }
 
     @Override
     public void storeOtp(String username, String otp) {
         otpStorage.put(username, otp);
-        // Xoá OTP sau 5 phút
-        scheduler.schedule(() -> otpStorage.remove(username), 5, TimeUnit.MINUTES);
+    }
+
+    @Override
+    public boolean validateOtp(String otp) {
+        return otpStorage.containsValue(otp);
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.windev.online_banking.payload.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -15,6 +16,9 @@ public class SignupRequest {
     @Size(max = 50)
     @Email
     private String email;
+
+    @NotBlank
+    private String phoneNumber; // Add validation pattern for international numbers
 
     @NotBlank
     @Size(min = 6, max = 40)

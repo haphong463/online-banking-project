@@ -71,33 +71,12 @@ public class AuthController {
     }
 
 
-//    @PostMapping("/signup")
-//    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-//        if (userRepository.findByUsername(signUpRequest.getUsername()).isPresent()) {
-//            return ResponseEntity
-//                    .badRequest()
-//                    .body(new MessageResponse("Error: Username is already taken!"));
-//        }
-//
-//        if (userRepository.findByEmail(signUpRequest.getEmail()).isPresent()) {
-//            return ResponseEntity
-//                    .badRequest()
-//                    .body(new MessageResponse("Error: Email is already in use!"));
-//        }
-//
-//        User user = new User();
-//        user.setUsername(signUpRequest.getUsername());
-//        user.setEmail(signUpRequest.getEmail());
-//        user.setPassword(encoder.encode(signUpRequest.getPassword()));
-//        user.setRole("USER");
-//        user.setEmailVerified(false);
-//
-//        userRepository.save(user);
-//
-//        emailVerificationService.sendVerificationEmail(user);
-//
-//        return ResponseEntity.ok(new MessageResponse("User registered successfully! Please check your email to verify your account."));
-//    }
+    @PostMapping("/signup")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+        userService.registerUser(signUpRequest);
+
+        return ResponseEntity.ok(new MessageResponse("User registered successfully! Please check your email to verify your account."));
+    }
 
     @GetMapping("/verify-email")
     public ResponseEntity<?> verifyEmail(@RequestParam String token) {

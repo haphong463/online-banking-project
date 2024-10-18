@@ -3,6 +3,7 @@ package com.windev.online_banking.service.impl;
 
 import com.windev.online_banking.entity.User;
 import com.windev.online_banking.exception.BankingException;
+import com.windev.online_banking.payload.request.SignupRequest;
 import com.windev.online_banking.repository.UserRepository;
 import com.windev.online_banking.security.JwtUtil;
 import com.windev.online_banking.service.EmailService;
@@ -25,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class UserServiceImplTest {
+class UserServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
@@ -53,6 +54,8 @@ public class UserServiceImplTest {
 
     private User user;
 
+    private SignupRequest signupRequest;
+
     @BeforeEach
     public void setUp() {
         user = new User();
@@ -64,10 +67,16 @@ public class UserServiceImplTest {
         user.setEnabled(true);
         user.setFailedLoginAttempts(0);
         user.setAccountNonLocked(true);
+
+
+        signupRequest = new SignupRequest();
+        signupRequest.setEmail("test@example.com");
+        signupRequest.setUsername("testuser");
+        signupRequest.setPassword("encodedPassword");
     }
 
     @Test
-    public void testRegisterUser_Success() {
+    void testRegisterUser_Success() {
         // Arrange
         when(userRepository.findByUsername(user.getUsername())).thenReturn(null);
         when(userRepository.findByEmail(user.getEmail())).thenReturn(null);
@@ -75,7 +84,7 @@ public class UserServiceImplTest {
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         // Act
-        User registeredUser = userService.registerUser(user);
+        User registeredUser = userService.registerUser(signupRequest);
 
         // Assert
         assertNotNull(registeredUser);
@@ -90,13 +99,13 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void testRegisterUser_UsernameExists() {
+    void testRegisterUser_UsernameExists() {
         // Arrange
         when(userRepository.findByUsername(user.getUsername())).thenReturn(Optional.ofNullable(user));
 
         // Act & Assert
         BankingException exception = assertThrows(BankingException.class, () -> {
-            userService.registerUser(user);
+            userService.registerUser(signupRequest);
         });
 
         assertEquals("Username already exists", exception.getMessage());
@@ -108,14 +117,14 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void testRegisterUser_EmailExists() {
+    void testRegisterUser_EmailExists() {
         // Arrange
         when(userRepository.findByUsername(user.getUsername())).thenReturn(null);
         when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.ofNullable(user));
 
         // Act & Assert
         BankingException exception = assertThrows(BankingException.class, () -> {
-            userService.registerUser(user);
+            userService.registerUser(signupRequest);
         });
 
         assertEquals("Email already in use", exception.getMessage());
@@ -127,7 +136,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void testLoginUser_Success() {
+    void testLoginUser_Success() {
         // Arrange
         String password = "encodedPassword";
         when(userRepository.findByUsername(user.getUsername())).thenReturn(Optional.of(user));
@@ -156,7 +165,7 @@ public class UserServiceImplTest {
         verify(emailService, times(1)).sendOtpEmail(user.getEmail(), "Your OTP Code", "Your OTP code is: 123456");
     }
     @Test
-    public void testLoginUser_InvalidCredentials() {
+    void testLoginUser_InvalidCredentials() {
         // Arrange
         String wrongPassword = "wrongPassword";
         when(userRepository.findByUsername(user.getUsername())).thenReturn(Optional.of(user));
@@ -178,7 +187,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void testLoginUser_AccountLockedAfterMaxFailedAttempts() {
+    void testLoginUser_AccountLockedAfterMaxFailedAttempts() {
         // Arrange
         String wrongPassword = "wrongPassword";
         user.setFailedLoginAttempts(4);
@@ -206,7 +215,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void testLoginUser_UserNotFound() {
+    void testLoginUser_UserNotFound() {
         // Arrange
         when(userRepository.findByUsername(user.getUsername())).thenReturn(Optional.empty());
 

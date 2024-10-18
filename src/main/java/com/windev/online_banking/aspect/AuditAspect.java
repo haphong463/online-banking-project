@@ -24,8 +24,7 @@ public class AuditAspect {
     @AfterReturning("authenticateUser()")
     public void afterAuthenticateUser(JoinPoint joinPoint) {
         Object[] args = joinPoint.getArgs();
-        if (args.length > 0 && args[0] instanceof LoginRequest) {
-            LoginRequest loginRequest = (LoginRequest) args[0];
+        if (args.length > 0 && args[0] instanceof LoginRequest loginRequest) {
             log.info("User '{}' attempted to login.", loginRequest.getUsername());
         }
     }

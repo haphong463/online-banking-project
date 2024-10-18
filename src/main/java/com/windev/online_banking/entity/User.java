@@ -44,6 +44,8 @@ public class User {
 
     private String resetToken;
 
+    private String phoneNumber; // Thêm trường số điện thoại
+
     private Date resetTokenExpiration;
 
     private int failedLoginAttempts;
